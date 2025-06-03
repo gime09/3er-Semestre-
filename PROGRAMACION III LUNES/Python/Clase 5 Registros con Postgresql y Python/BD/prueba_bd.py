@@ -14,20 +14,31 @@ try:
 
     with conexion:
         with conexion.cursor() as cursor:
-            sentencia = "SELECT * FROM persona WHERE id_persona = %s " # Placeholder
-            id_persona = input("Digite un número para el id_perosna: ")
-            cursor.execute(sentencia, (id_persona,))  # Ejecutamos la sentencia
-            registros = cursor.fetchone()  # Recuperamos todos los registros
+            # Solicitar IDs al usuario
+            entrada = input("Digite los id_persona a buscar (separados por coma): ")
 
-            # Imprimimos los registros
-            print("Registros en la tabla persona:")
+            # Convertir entrada a tupla de enteros
+            try:
+                ids = tuple(int(id.strip()) for id in entrada.split(","))
+            except ValueError:
+                print("Error: Ingrese solo números separados por comas")
+                exit()
+
+            # Consulta SQL con parámetros
+            sentencia = "SELECT * FROM persona WHERE id_persona IN %s"
+            cursor.execute(sentencia, (ids,))  # Note la coma para crear una tupla de un solo elemento
+
+            # Obtener y mostrar resultados
+            registros = cursor.fetchall()
+            print("\nRegistros encontrados:")
             for registro in registros:
                 print(registro)
+            print(f"\nTotal de registros encontrados: {len(registros)}")
 
 except psycopg2.Error as e:
     print(f"Error al conectar a PostgreSQL: {e}")
 
 finally:
-    if conexion is not None:  # Verificamos si la conexión existe
-        conexion.close()  # Cerramos la conexión si existe
-        print("Conexión cerrada")
+    if conexion is not None:
+        conexion.close()
+        print("\nConexión cerrada")
